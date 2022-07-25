@@ -33,23 +33,39 @@ class ProjectListView(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
-        user = Users.objects.get(username=request.user)
-        # user_data = SignupUserSerializer(user).data
+        user = Users.objects.get(username=request.user.username)
         query = Projects.objects.filter(author_user_id=user)
         serializer = self.serializer_class(query, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
-        serializer = self.serializer_detail_class(data=request.data)
-        user = Users.objects.get(username=request.user)
-        user_data = SignupUserSerializer(user).data
+        user = Users.objects.get(username=request.user.username)
+        project = Projects.objects.create(title=request.data['title'],
+                                          description=request.data['description'],
+                                          type=request.data['type'],
+                                          author_user_id=user)
+        serializer = self.serializer_detail_class(instance=project, data=project)
         if serializer.is_valid():
-            # user_id = self.serializer_detail_class.get_author_user_id(request.user)
-            project = serializer.save(auth_user_id=user_data)
-            contributor = Contributors.objects.create(user_id=user,
+            print('DANS le if')
+            project = serializer.save()
+            contributor = Contributors.objects.create(user_id=request.user,
                                                       project_id=project,
                                                       role='AUTHOR')
             contributor.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProjectDetailView(ModelViewSet):
+    serializer_class = ProjectDetailSerializer
+    queryset = Projects.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def retrieve(self, request, *args, **kwargs):
+        print('type : ', type(request.user.id), request.user.id)
+        project = Projects.objects.get(id=kwargs['pk'])
+        print('mon print', project)
+        if project:
+            test = self.serializer_class(project)
+            return Response(test.data, status=status.HTTP_200_OK)
 
