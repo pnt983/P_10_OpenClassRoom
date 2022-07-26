@@ -30,18 +30,8 @@ class ProjectSerializer(ModelSerializer):
 
 class ProjectDetailSerializer(ModelSerializer):
 
-    author_user_id = SignupUserSerializer()
+    author = SignupUserSerializer()
 
     class Meta:
         model = Projects
-        fields = ['title', 'description', 'type', 'author_user_id']
-        extra_kwargs = [{'author_user_id': {'read_only': True}}]
-
-    # def create(self, title, description, type, author_user_id):
-    #     project = Projects.objects.create()
-    #     project.title = title
-    #     project.description = description
-    #     project.type = type
-    #     project.author_user_id = author_user_id
-    #     project.save()
-    #     return project
+        fields = ['title', 'description', 'type', 'author']

@@ -22,7 +22,7 @@ class Projects(models.Model):
     title = models.CharField(max_length=128)
     description = models.CharField(max_length=500)
     type = models.CharField(max_length=128, choices=PROJECTS_CHOICES)
-    author_user_id = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='author_user_id', on_delete=models.CASCADE, related_name='project')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='author', on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.title}"

@@ -34,19 +34,24 @@ class ProjectListView(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         user = Users.objects.get(username=request.user.username)
-        query = Projects.objects.filter(author_user_id=user)
+        query = Projects.objects.filter(author=user)
         serializer = self.serializer_class(query, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
-        user = Users.objects.get(username=request.user.username)
-        project = Projects.objects.create(title=request.data['title'],
-                                          description=request.data['description'],
-                                          type=request.data['type'],
-                                          author_user_id=user)
-        serializer = self.serializer_detail_class(instance=project, data=project)
+        # project = Projects.objects.create(title=request.data['title'],
+        #                                   description=request.data['description'],
+        #                                   type=request.data['type'],
+        #                                   author=request.user)
+
+        data = {
+            'title': request.data['title'],
+            'description': request.data['description'],
+            'type': request.data['type'],
+            'author': request.user
+        }
+        serializer = self.serializer_detail_class(data=data)
         if serializer.is_valid():
-            print('DANS le if')
             project = serializer.save()
             contributor = Contributors.objects.create(user_id=request.user,
                                                       project_id=project,
