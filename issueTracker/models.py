@@ -59,5 +59,8 @@ class Issues(models.Model):
 class Comments(models.Model):
     description = models.CharField(max_length=500)
     created_time = models.DateTimeField(auto_now_add=True)
-    author_user_id = models.ForeignKey(Users, on_delete=models.CASCADE)  # Peut-etre pas mettre Cascade
-    issue_id = models.ForeignKey(Issues, on_delete=models.CASCADE)  # Peut-etre pas mettre Cascade)
+    author = models.ForeignKey(Users, on_delete=models.CASCADE)  # Peut-etre pas mettre Cascade
+    issue = models.ForeignKey(Issues, on_delete=models.CASCADE)  # Peut-etre pas mettre Cascade)
+
+    def __str__(self):
+        return f"{self.description}"

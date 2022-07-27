@@ -43,3 +43,10 @@ class IssueSerializer(ModelSerializer):
         model = Issues
         fields = ['title', 'description', 'tag', 'priority', 'status', 'created_time',
                   'project', 'assignee_user']
+
+
+class CommentSerializer(ModelSerializer):
+
+    class Meta:
+        model = Comments
+        fields = ['description', 'created_time', 'author', 'issue']

@@ -7,7 +7,8 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.response import Response
 from rest_framework import status, generics
 
-from .serializers import ProjectDetailSerializer, SignupUserSerializer, ProjectSerializer, IssueSerializer
+from .serializers import ProjectDetailSerializer, SignupUserSerializer, ProjectSerializer, IssueSerializer, \
+    CommentSerializer
 from .models import Users, Contributors, Projects, Issues, Comments
 
 
@@ -57,13 +58,10 @@ class ProjectListView(ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self, request, *args, **kwargs):
-        try:
-            project = Projects.objects.get(pk=kwargs['project'])
-            if project:
-                serializer = self.serializer_class(project)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-        except ObjectDoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        project = get_object_or_404(Projects, pk=kwargs['project'])
+        if project:
+            serializer = self.serializer_class(project)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update(self, request, *args, **kwargs):
         obj = get_object_or_404(Projects, id=kwargs['project'])
@@ -133,4 +131,59 @@ class IssueView(ModelViewSet):
         self.perform_destroy(issue)
         message = f'Le projet " {issue} " a été correctement supprimé.'
         return Response(message, status=status.HTTP_200_OK)
+
+
+class CommentView(ModelViewSet):
+    queryset = Comments.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'Comment'
+
+    def list(self, request, *args, **kwargs):
+        # kwargs ---> {'project_project': '24', 'issue_issue': '1'}
+        issue = get_object_or_404(Issues, id=kwargs['issue_issue'])
+        # project = Projects.objects.get(id=kwargs['project_project'])
+        comments_list = []
+        for comment in Comments.objects.all():
+            if comment.project == issue:
+                comments_list.append(comment)
+        serializer = self.serializer_class(comments_list, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def create(self, request, *args, **kwargs):
+        issue = get_object_or_404(Issues, id=kwargs['issue_issue'])
+        data = {
+            'description': request.data['description'],
+            'author': request.user.id,
+            'issue': issue.id,
+        }
+        serializer = self.serializer_class(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors)
+
+    def update(self, request, *args, **kwargs):
+        # kwargs ---> {'project_project': '24', 'issue_issue': '1', 'Comment': '1'}
+        comment = get_object_or_404(Comments, id=kwargs['Comment'])
+        self.check_object_permissions(self.request, comment)
+        serializer = self.serializer_class(comment, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        comment = get_object_or_404(Comments, id=kwargs['Comment'])
+        self.check_object_permissions(self.request, comment)
+        self.perform_destroy(comment)
+        message = f'Le projet " {comment} " a été correctement supprimé.'
+        return Response(message, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, *args, **kwargs):
+        comment = get_object_or_404(Comments, pk=kwargs['Comment'])
+        if comment:
+            serializer = self.serializer_class(comment)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
 
