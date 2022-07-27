@@ -37,6 +37,9 @@ class Contributors(models.Model):
     project = models.ForeignKey(Projects, on_delete=models.CASCADE, null=True, related_name='contributor_project')
     role = models.CharField(max_length=30, choices=CHOICES, verbose_name='role')
 
+    def __str__(self):
+        return f"L'utilisateur : {self.user}, pour le projet : {self.project}"
+
 
 class Issues(models.Model):
     PRIORITY_CHOICES = [('Urgent', 'Urgent'), ('Normal', 'Normal'), ('Cool', 'Cool')]

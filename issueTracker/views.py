@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status, generics
 
 from .serializers import ProjectDetailSerializer, SignupUserSerializer, ProjectSerializer, IssueSerializer, \
-    CommentSerializer
+    CommentSerializer, ContributorSerializer
 from .models import Users, Contributors, Projects, Issues, Comments
 
 
@@ -81,6 +81,42 @@ class ProjectListView(ModelViewSet):
         return Response(message, status=status.HTTP_200_OK)
 
 
+class ContributorView(ModelViewSet):
+    queryset = Contributors.objects.all()
+    serializer_class = ContributorSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'contributor'
+
+    def list(self, request, *args, **kwargs):
+        # kwargs ---> {'project_project': '24'}
+        contributors = Contributors.objects.filter(project=kwargs['project_project'])
+        serializer = self.serializer_class(contributors, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def create(self, request, *args, **kwargs):
+        project = get_object_or_404(Projects, id=kwargs['project_project'])
+        # project = Projects.objects.get(id=kwargs['project_project'])
+        data = {
+            'user': request.user.id,
+            'project': project.id,
+            'role': request.data['role']
+        }
+        serializer = self.serializer_class(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors)
+
+    def destroy(self, request, *args, **kwargs):
+        user = get_object_or_404(Users, id=kwargs['contributor'])
+        project = get_object_or_404(Projects, id=kwargs['project_project'])
+        contributor = Contributors.objects.filter(user=user, project=project)
+        self.check_object_permissions(self.request, contributor)
+        self.perform_destroy(contributor)
+        message = f'Le contributeur " {contributor} " a été correctement supprimé.'
+        return Response(message, status=status.HTTP_200_OK)
+
+
 class IssueView(ModelViewSet):
     queryset = Issues.objects.all()
     serializer_class = IssueSerializer
@@ -129,7 +165,7 @@ class IssueView(ModelViewSet):
         issue = get_object_or_404(Issues, id=kwargs['issue'])
         self.check_object_permissions(self.request, issue)
         self.perform_destroy(issue)
-        message = f'Le projet " {issue} " a été correctement supprimé.'
+        message = f'Le probleme " {issue} " a été correctement supprimé.'
         return Response(message, status=status.HTTP_200_OK)
 
 
@@ -177,7 +213,7 @@ class CommentView(ModelViewSet):
         comment = get_object_or_404(Comments, id=kwargs['Comment'])
         self.check_object_permissions(self.request, comment)
         self.perform_destroy(comment)
-        message = f'Le projet " {comment} " a été correctement supprimé.'
+        message = f'Le commentaire " {comment} " a été correctement supprimé.'
         return Response(message, status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, **kwargs):

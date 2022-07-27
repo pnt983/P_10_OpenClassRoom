@@ -37,6 +37,13 @@ class ProjectDetailSerializer(ModelSerializer):
         fields = ['title', 'description', 'type', 'author']
 
 
+class ContributorSerializer(ModelSerializer):
+
+    class Meta:
+        model = Contributors
+        fields = ['user', 'project', 'role']
+
+
 class IssueSerializer(ModelSerializer):
 
     class Meta:
