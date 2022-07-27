@@ -7,7 +7,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.response import Response
 from rest_framework import status, generics
 
-from .serializers import ProjectDetailSerializer, SignupUserSerializer, ProjectSerializer
+from .serializers import ProjectDetailSerializer, SignupUserSerializer, ProjectSerializer, IssueSerializer
 from .models import Users, Contributors, Projects, Issues, Comments
 
 
@@ -18,11 +18,12 @@ class SignupUserView(ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            serializer.create_user(first_name=request.data['first_name'],
-                                   last_name=request.data['last_name'],
-                                   email=request.data['email'],
-                                   username=request.data['username'],
-                                   password=request.data['password'])
+            # serializer.create_user(first_name=request.data['first_name'],
+            #                        last_name=request.data['last_name'],
+            #                        email=request.data['email'],
+            #                        username=request.data['username'],
+            #                        password=request.data['password'])
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -48,8 +49,8 @@ class ProjectListView(ModelViewSet):
         serializer = self.serializer_class(data=data)
         if serializer.is_valid():
             project = serializer.save()
-            contributor = Contributors.objects.create(user_id=request.user,
-                                                      project_id=project,
+            contributor = Contributors.objects.create(user=request.user,
+                                                      project=project,
                                                       role='AUTHOR')
             contributor.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -82,21 +83,54 @@ class ProjectListView(ModelViewSet):
         return Response(message, status=status.HTTP_200_OK)
 
 
+class IssueView(ModelViewSet):
+    queryset = Issues.objects.all()
+    serializer_class = IssueSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'issue'
 
+    def list(self, request, *args, **kwargs):
+        project = get_object_or_404(Projects, id=kwargs['project_project'])
+        # project = Projects.objects.get(id=kwargs['project_project'])
+        issues_list = []
+        for issue in Issues.objects.all():
+            if issue.project == project:
+                issues_list.append(issue)
+        serializer = self.serializer_class(issues_list, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def create(self, request, *args, **kwargs):
+        project = get_object_or_404(Projects, id=kwargs['project_project'])
+        # project = Projects.objects.get(id=kwargs['project_project'])
+        data = {
+            'title': request.data['title'],
+            'description': request.data['description'],
+            'tag': request.data['tag'],
+            'priority': request.data['priority'],
+            'project': project.id,
+            'status': request.data['status'],
+            'assignee_user': request.user.id
+        }
+        serializer = self.serializer_class(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors)
 
+    def update(self, request, *args, **kwargs):
+        # kwargs ---> {'project_project': '24', 'issue': '2'}
+        issue = get_object_or_404(Issues, id=kwargs['issue'])
+        self.check_object_permissions(self.request, issue)
+        serializer = self.serializer_class(issue, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# class ProjectDetailView(ModelViewSet):
-#     serializer_class = ProjectDetailSerializer
-#     queryset = Projects.objects.all()
-#     permission_classes = [IsAuthenticated]
-#     lookup_field = "project"
-#
-#     def retrieve(self, request, *args, **kwargs):
-#         print('type : ', type(request.user.id), request.user.id)
-#         project = Projects.objects.get(id=kwargs['pk'])
-#         print('mon print', project)
-#         if project:
-#             test = self.serializer_class(project)
-#             return Response(test.data, status=status.HTTP_200_OK)
+    def destroy(self, request, *args, **kwargs):
+        issue = get_object_or_404(Issues, id=kwargs['issue'])
+        self.check_object_permissions(self.request, issue)
+        self.perform_destroy(issue)
+        message = f'Le projet " {issue} " a été correctement supprimé.'
+        return Response(message, status=status.HTTP_200_OK)
 

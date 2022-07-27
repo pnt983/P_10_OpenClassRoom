@@ -35,3 +35,11 @@ class ProjectDetailSerializer(ModelSerializer):
     class Meta:
         model = Projects
         fields = ['title', 'description', 'type', 'author']
+
+
+class IssueSerializer(ModelSerializer):
+
+    class Meta:
+        model = Issues
+        fields = ['title', 'description', 'tag', 'priority', 'status', 'created_time',
+                  'project', 'assignee_user']

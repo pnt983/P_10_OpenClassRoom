@@ -33,8 +33,8 @@ class Contributors(models.Model):
     CONTRIBUTOR = 'Contributor'
     CHOICES = [(AUTHOR, 'Auteur'), (CONTRIBUTOR, 'Contributeur')]
 
-    user_id = models.ForeignKey(Users, on_delete=models.CASCADE, null=True)
-    project_id = models.ForeignKey(Projects, on_delete=models.CASCADE, null=True, related_name='contributor_project')
+    user = models.ForeignKey(Users, on_delete=models.CASCADE, null=True)
+    project = models.ForeignKey(Projects, on_delete=models.CASCADE, null=True, related_name='contributor_project')
     role = models.CharField(max_length=30, choices=CHOICES, verbose_name='role')
 
 
@@ -47,11 +47,13 @@ class Issues(models.Model):
     description = models.CharField(max_length=500)
     tag = models.CharField(max_length=60, choices=TAG_CHOICES)
     priority = models.CharField(max_length=60, choices=PRIORITY_CHOICES)
-    project_id = models.ForeignKey(Projects, on_delete=models.CASCADE)
+    project = models.ForeignKey(Projects, on_delete=models.CASCADE)
     status = models.CharField(max_length=60, choices=STATUS_CHOICES)
     created_time = models.DateTimeField(auto_now_add=True)
-    # author_user_id = models.ForeignKey(Contributors, on_delete=models.CASCADE)  # Peut-etre pas mettre Cascade
-    assignee_user_id = models.ForeignKey(Users, on_delete=models.CASCADE)   # Peut-etre pas mettre Cascade
+    assignee_user = models.ForeignKey(Users, on_delete=models.CASCADE)   # Peut-etre pas mettre Cascade
+
+    def __str__(self):
+        return f"{self.title}"
 
 
 class Comments(models.Model):
