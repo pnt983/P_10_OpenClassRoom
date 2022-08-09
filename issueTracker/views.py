@@ -92,10 +92,10 @@ class ContributorView(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
-        project = get_object_or_404(Projects, id=kwargs['project_project'])
-        # project = Projects.objects.get(id=kwargs['project_project'])
+        project = get_object_or_404(Projects, id=kwargs['project_pk'])
+        user = get_object_or_404(Users, id=request.data['user'])
         data = {
-            'user': request.user.id,
+            'user': user.id,
             'project': project.id,
             'role': request.data['role']
         }
