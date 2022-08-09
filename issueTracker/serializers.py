@@ -11,11 +11,7 @@ class SignupUserSerializer(ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}, 'id': {'read_only': True}}
 
     def create_user(self, first_name, last_name, email, username, password):
-        user = Users.objects.create()
-        user.first_name = first_name
-        user.last_name = last_name
-        user.email = email
-        user.username = username
+        user = Users(first_name=first_name, last_name=last_name, email=email, username=username)
         user.set_password(password)
         user.save()
         return user
