@@ -1,15 +1,12 @@
-from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, get_object_or_404
-from django.http import Http404
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
-from rest_framework import status, generics
+from rest_framework import status
 
 from .permissions import ContributorPermission, ProjectPermission, IssuePermission, CommentPermission
-from .serializers import ProjectDetailSerializer, SignupUserSerializer, ProjectSerializer, IssueSerializer, \
-    CommentSerializer, ContributorSerializer
+from .serializers import (SignupUserSerializer, ProjectSerializer, IssueSerializer, CommentSerializer,\
+                          ContributorSerializer)
 from .models import Users, Contributors, Projects, Issues, Comments
 
 
@@ -106,10 +103,10 @@ class ContributorView(ModelViewSet):
         return Response(serializer.errors)
 
     def destroy(self, request, *args, **kwargs):
-        user = get_object_or_404(Users, id=kwargs['contributor'])
-        project = get_object_or_404(Projects, id=kwargs['project_project'])
+        print('mon print', kwargs)
+        user = get_object_or_404(Users, id=kwargs['pk'])
+        project = get_object_or_404(Projects, id=kwargs['project_pk'])
         contributor = Contributors.objects.filter(user=user, project=project)
-        self.check_object_permissions(self.request, contributor)
         self.perform_destroy(contributor)
         message = f'Le contributeur " {contributor} " a été correctement supprimé.'
         return Response(message, status=status.HTTP_200_OK)
@@ -122,7 +119,6 @@ class IssueView(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         project = get_object_or_404(Projects, id=kwargs['project_pk'])
-        # project = Projects.objects.get(id=kwargs['project_pk'])
         issues_list = []
         for issue in Issues.objects.all():
             if issue.project == project:
@@ -132,7 +128,6 @@ class IssueView(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         project = get_object_or_404(Projects, id=kwargs['project_pk'])
-        # project = Projects.objects.get(id=kwargs['project_project'])
         data = {
             'title': request.data['title'],
             'description': request.data['description'],
@@ -172,7 +167,6 @@ class CommentView(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         issue = get_object_or_404(Issues, id=kwargs['issue_pk'])
-        # project = Projects.objects.get(id=kwargs['project_project'])
         comments_list = []
         for comment in Comments.objects.all():
             if comment.issue == issue:

@@ -16,12 +16,18 @@ class ContributorPermission(BasePermission):
 class ProjectPermission(BasePermission):
 
     def has_permission(self, request, view):
-        if Contributors.objects.filter(user=request.user).filter(project=view.kwargs['pk']).exists():
+        if view.action == 'create':
             return True
+        elif view.action == 'list':
+            if Contributors.objects.filter(user=request.user).exists():
+                return True
+        else:
+            if Contributors.objects.filter(user=request.user).filter(project=view.kwargs['pk']).exists():
+                return True
         return False
 
     def has_object_permission(self, request, view, obj):
-        if request.method in ['PUT', 'DELETE']:
+        if view.action in ['update', 'destroy']:
             return obj.author == request.user
         return False
 
@@ -34,7 +40,7 @@ class IssuePermission(BasePermission):
         return False
 
     def has_object_permission(self, request, view, obj):
-        if request.method in ['PUT', 'DELETE']:
+        if view.action in ['update', 'destroy']:
             return obj.assignee_user == request.user
         return False
 
@@ -47,7 +53,7 @@ class CommentPermission(BasePermission):
         return False
 
     def has_object_permission(self, request, view, obj):
-        if request.method in ['PUT', 'DELETE']:
+        if view.action in ['update', 'destroy']:
             return obj.author == request.user
         return False
 
