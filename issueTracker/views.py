@@ -14,7 +14,7 @@ class SignupUserView(ModelViewSet):
     serializer_class = SignupUserSerializer
     queryset = Users.objects.all()
 
-    def create(self, request, *args, **kwargs):     # Quel save garder entre serialiser et celui de create_user
+    def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.create_user(first_name=request.data['first_name'],
@@ -22,7 +22,6 @@ class SignupUserView(ModelViewSet):
                                    email=request.data['email'],
                                    username=request.data['username'],
                                    password=request.data['password'])
-            # serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
