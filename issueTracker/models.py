@@ -27,6 +27,9 @@ class Projects(models.Model):
     def __str__(self):
         return f"{self.title}"
 
+    class Meta:
+        unique_together = ('title', 'description', 'type', 'author')
+
 
 class Contributors(models.Model):
     AUTHOR = 'Author'
@@ -36,6 +39,9 @@ class Contributors(models.Model):
     user = models.ForeignKey(Users, on_delete=models.CASCADE, null=True)
     project = models.ForeignKey(Projects, on_delete=models.CASCADE, null=True, related_name='contributor_project')
     role = models.CharField(max_length=30, choices=CHOICES, verbose_name='role')
+
+    class Meta:
+        unique_together = ('user', 'project')
 
     def __str__(self):
         return f"L'utilisateur : {self.user}, pour le projet : {self.project}"
@@ -53,17 +59,25 @@ class Issues(models.Model):
     project = models.ForeignKey(Projects, on_delete=models.CASCADE)
     status = models.CharField(max_length=60, choices=STATUS_CHOICES)
     created_time = models.DateTimeField(auto_now_add=True)
-    assignee_user = models.ForeignKey(Users, on_delete=models.CASCADE)   # Peut-etre pas mettre Cascade
+    assignee_user = models.ForeignKey(Users, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.title}"
+
+    class Meta:
+        unique_together = ('title', 'description', 'tag', 'priority', 'project', 'status', 'assignee_user')
 
 
 class Comments(models.Model):
     description = models.CharField(max_length=500)
     created_time = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(Users, on_delete=models.CASCADE)  # Peut-etre pas mettre Cascade
-    issue = models.ForeignKey(Issues, on_delete=models.CASCADE)  # Peut-etre pas mettre Cascade)
+    author = models.ForeignKey(Users, on_delete=models.CASCADE)
+    issue = models.ForeignKey(Issues, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.description}"
+
+    class Meta:
+        unique_together = ('description', 'author', 'issue')
+
+

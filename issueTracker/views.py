@@ -1,11 +1,11 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
 
 from .permissions import ContributorPermission, ProjectPermission, IssuePermission, CommentPermission
-from .serializers import (SignupUserSerializer, ProjectSerializer, IssueSerializer, CommentSerializer,\
+from .serializers import (SignupUserSerializer, ProjectSerializer, IssueSerializer, CommentSerializer,
                           ContributorSerializer)
 from .models import Users, Contributors, Projects, Issues, Comments
 
@@ -102,12 +102,11 @@ class ContributorView(ModelViewSet):
         return Response(serializer.errors)
 
     def destroy(self, request, *args, **kwargs):
-        print('mon print', kwargs)
         user = get_object_or_404(Users, id=kwargs['pk'])
         project = get_object_or_404(Projects, id=kwargs['project_pk'])
         contributor = Contributors.objects.filter(user=user, project=project)
         self.perform_destroy(contributor)
-        message = f'Le contributeur " {contributor} " a été correctement supprimé.'
+        message = f'Le contributeur " {kwargs["pk"]} " a été correctement supprimé.'
         return Response(message, status=status.HTTP_200_OK)
 
 

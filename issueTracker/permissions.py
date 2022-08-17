@@ -1,15 +1,22 @@
-from rest_framework.permissions import BasePermission, SAFE_METHODS
-from .models import Projects, Contributors
+from rest_framework.permissions import BasePermission
+from .models import Projects, Contributors, Issues
+
+
+def get_contributor(user, project):
+    return Contributors.objects.filter(user=user).filter(project=project).exists()
 
 
 class ContributorPermission(BasePermission):
 
     def has_permission(self, request, view):
         project = Projects.objects.get(id=view.kwargs['project_pk'])
-        if project in Projects.objects.filter(author=request.user):
-            if request.method in SAFE_METHODS:
-                return True
-            return request.user == project.author
+        if request.user == project.author:
+            return True
+
+        if view.action in ['list']:
+            return get_contributor(request.user, project)
+            # return Contributors.objects.filter(user=request.user).filter(project=project).exists()
+
         return False
 
 
@@ -22,7 +29,8 @@ class ProjectPermission(BasePermission):
             if Contributors.objects.filter(user=request.user).exists():
                 return True
         else:
-            if Contributors.objects.filter(user=request.user).filter(project=view.kwargs['pk']).exists():
+            if get_contributor(request.user, project=view.kwargs['pk']):
+            # if Contributors.objects.filter(user=request.user).filter(project=view.kwargs['pk']).exists():
                 return True
         return False
 
@@ -35,7 +43,7 @@ class ProjectPermission(BasePermission):
 class IssuePermission(BasePermission):
 
     def has_permission(self, request, view):
-        if Contributors.objects.filter(user=request.user).filter(project=view.kwargs['project_pk']).exists():
+        if get_contributor(request.user, project=view.kwargs['project_pk']):
             return True
         return False
 
@@ -48,7 +56,7 @@ class IssuePermission(BasePermission):
 class CommentPermission(BasePermission):
 
     def has_permission(self, request, view):
-        if Contributors.objects.filter(user=request.user).filter(project=view.kwargs['project_pk']).exists():
+        if get_contributor(request.user, project=view.kwargs['project_pk']):
             return True
         return False
 

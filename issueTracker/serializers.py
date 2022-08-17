@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer, ValidationError
+from rest_framework.serializers import ModelSerializer
 
 from .models import Users, Contributors, Projects, Issues, Comments
 
@@ -11,21 +11,11 @@ class SignupUserSerializer(ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}, 'id': {'read_only': True}}
 
     def create_user(self, first_name, last_name, email, username, password):
-        user = Users.objects.create_user(first_name=first_name, last_name=last_name, email=email,
+        return Users.objects.create_user(first_name=first_name, last_name=last_name, email=email,
                                          username=username, password=password)
-        return user
 
 
 class ProjectSerializer(ModelSerializer):
-
-    class Meta:
-        model = Projects
-        fields = ['title', 'description', 'type', 'author']
-
-
-class ProjectDetailSerializer(ModelSerializer):
-
-    author = SignupUserSerializer()
 
     class Meta:
         model = Projects
