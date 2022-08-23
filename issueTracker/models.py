@@ -8,7 +8,7 @@ class Users(AbstractUser):
     id = models.IntegerField(primary_key=True)
     first_name = models.CharField(max_length=60)
     last_name = models.CharField(max_length=60)
-    email = models.EmailField(max_length=254)
+    email = models.EmailField(max_length=254, unique=True)
     username = models.CharField(max_length=60, unique=True)
     password = models.CharField(max_length=60)
 

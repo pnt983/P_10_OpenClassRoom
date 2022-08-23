@@ -1,5 +1,5 @@
 from rest_framework.permissions import BasePermission
-from .models import Projects, Contributors, Issues
+from .models import Projects, Contributors
 
 
 def get_contributor(user, project):
@@ -15,7 +15,6 @@ class ContributorPermission(BasePermission):
 
         if view.action in ['list']:
             return get_contributor(request.user, project)
-            # return Contributors.objects.filter(user=request.user).filter(project=project).exists()
 
         return False
 
@@ -30,7 +29,6 @@ class ProjectPermission(BasePermission):
                 return True
         else:
             if get_contributor(request.user, project=view.kwargs['pk']):
-            # if Contributors.objects.filter(user=request.user).filter(project=view.kwargs['pk']).exists():
                 return True
         return False
 
